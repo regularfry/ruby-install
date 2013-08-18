@@ -16,7 +16,7 @@ SIG=$(PKG_DIR)/$(PKG_NAME).asc
 DESTDIR?=/
 PREFIX?=/usr/local
 INSTALL_PATH=$(DESTDIR)/$(PREFIX)
-DOC_DIR=$(INSTALL_DIR)/share/doc/$(NAME)
+DOC_DIR=$(INSTALL_PATH)/share/doc/$(NAME)
 
 pkg:
 	mkdir $(PKG_DIR)
