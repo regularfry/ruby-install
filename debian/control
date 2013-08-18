@@ -1,0 +1,14 @@
+Source: ruby-install
+Section: devel
+Priority: extra
+Maintainer: Alex Young <alex@blackkettle.org>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.3
+Homepage: https://github.com/postmodern/ruby-install#readme
+
+Package: ruby-install
+Architecture: all
+Depends: ${misc:Depends}, sudo
+Description: Builds and installs ruby binaries.
+  Installs the required system packages to build and install MRI, JRuby 
+  and Rubinius interpreters under /opt/rubies or ~/.rubies.

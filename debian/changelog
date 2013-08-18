@@ -1,0 +1,5 @@
+ruby-install (0.3.0) unstable; urgency=low
+
+  * Initial package
+
+ -- Alex Young <alex@blackkettle.org>  Sun, 18 Aug 2013 14:02:53 +0100
