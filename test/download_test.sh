@@ -3,14 +3,14 @@
 URL="https://raw.github.com/postmodern/ruby-install/master/README.md"
 OUTPUT="./test/download.txt"
 
-test_download()
+function test_download()
 {
 	download "$URL" "$OUTPUT" 2>/dev/null
 
 	assertTrue "did not download the file" '[[ -f "$OUTPUT" ]]'
 }
 
-test_download_with_a_directory()
+function test_download_with_a_directory()
 {
 	local dir="test/subdir"
 	mkdir -p "$dir"
@@ -23,25 +23,25 @@ test_download_with_a_directory()
 	rm -r "$dir"
 }
 
-test_download_using_wget()
+function test_download_using_wget()
 {
-	[[ $(command -v wget) ]] || return
+	command -v wget >/dev/null || return
 
 	DOWNLOADER="wget" download "$URL" "$OUTPUT" 2>/dev/null
 
 	assertTrue "did not download the file" '[[ -f "$OUTPUT" ]]'
 }
 
-test_download_using_curl()
+function test_download_using_curl()
 {
-	[[ $(command -v curl ) ]] || return
+	command -v curl >/dev/null || return
 
 	DOWNLOADER="curl" download "$URL" "$OUTPUT" 2>/dev/null
 
 	assertTrue "did not download the file" '[[ -f "$OUTPUT" ]]'
 }
 
-tearDown()
+function tearDown()
 {
 	rm -f "$OUTPUT"
 }

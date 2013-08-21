@@ -3,7 +3,7 @@
 shopt -s extglob
 
 RUBY_INSTALL_VERSION="0.3.0"
-RUBY_INSTALL_DIR=$(dirname ${BASH_SOURCE[0]})
+RUBY_INSTALL_DIR="${BASH_SOURCE[0]%/*}"
 
 RUBIES=(ruby jruby rubinius maglev)
 PATCHES=()
@@ -12,31 +12,31 @@ CONFIGURE_OPTS=()
 #
 # Auto-detect the package manager.
 #
-if   [[ $(command -v apt-get) ]]; then PACKAGE_MANAGER="apt"
-elif [[ $(command -v yum)     ]]; then PACKAGE_MANAGER="yum"
-elif [[ $(command -v brew)    ]]; then PACKAGE_MANAGER="brew"
-elif [[ $(command -v pacman)  ]]; then PACKAGE_MANAGER="pacman"
+if   command -v apt-get >/dev/null; then PACKAGE_MANAGER="apt"
+elif command -v yum     >/dev/null; then PACKAGE_MANAGER="yum"
+elif command -v brew    >/dev/null; then PACKAGE_MANAGER="brew"
+elif command -v pacman  >/dev/null; then PACKAGE_MANAGER="pacman"
 fi
 
 #
 # Auto-detect the downloader.
 #
-if   [[ $(command -v wget) ]]; then DOWNLOADER="wget"
-elif [[ $(command -v curl) ]]; then DOWNLOADER="curl"
+if   command -v wget >/dev/null; then DOWNLOADER="wget"
+elif command -v curl >/dev/null; then DOWNLOADER="curl"
 fi
 
 #
 # Auto-detect the md5 utility.
 #
-if   [[ $(command -v md5sum) ]]; then MD5SUM="md5sum"
-elif [[ $(command -v md5)    ]]; then MD5SUM="md5"
+if   command -v md5sum >/dev/null; then MD5SUM="md5sum"
+elif command -v md5    >/dev/null; then MD5SUM="md5"
 fi
 
 #
 # Only use sudo if already root.
 #
-if [[ $UID -eq "0" ]]; then SUDO=""
-else                        SUDO="sudo"
+if (( $UID == 0 )); then SUDO=""
+else                     SUDO="sudo"
 fi
 
 #
@@ -92,7 +92,7 @@ function fetch()
 {
 	local file="$RUBY_INSTALL_DIR/$1.txt"
 	local key="$2"
-	local pair=`grep -E "^$key: " "$file"`
+	local pair="$(grep -E "^$key: " "$file")"
 
 	echo "${pair##$key:*( )}"
 }
@@ -103,11 +103,11 @@ function install_packages()
 		apt)	$SUDO apt-get install -y $* ;;
 		yum)	$SUDO yum install -y $*     ;;
 		brew)
-			local brew_owner=`/usr/bin/stat -f %Su /usr/local/bin/brew`
+			local brew_owner="$(/usr/bin/stat -f %Su /usr/local/bin/brew)"
 			sudo -u "$brew_owner" brew install $*
 			;;
 		pacman)
-			local missing_pkgs=`pacman -T $*`
+			local missing_pkgs="$(pacman -T $*)"
 
 			if [[ -n "$missing_pkgs" ]]; then
 				$SUDO pacman -S $missing_pkgs
@@ -126,7 +126,7 @@ function download()
 	local dest="$2"
 
 	if [[ -d "$dest" ]]; then
-		dest="$dest/$(basename "$url")"
+		dest="$dest/${url##*/}"
 	fi
 
 	case "$DOWNLOADER" in
@@ -157,7 +157,7 @@ function verify()
 		return 1
 	fi
 
-	if [[ `$MD5SUM "$path"` != *$md5* ]]; then
+	if [[ "$($MD5SUM "$path")" != *$md5* ]]; then
 		error "$path is invalid!"
 		return 1
 	fi
@@ -169,7 +169,7 @@ function verify()
 function extract()
 {
 	local archive="$1"
-	local dest="${2:-$(dirname "$archive")}"
+	local dest="${2:-${archive%/*}}"
 
 	case "$archive" in
 		*.tgz|*.tar.gz)		tar -xzf "$archive" -C "$dest" ;;
@@ -194,7 +194,7 @@ function load_ruby()
 		return 1
 	fi
 
-	local expanded_version=`fetch "$RUBY/versions" "$RUBY_VERSION"`
+	local expanded_version="$(fetch "$RUBY/versions" "$RUBY_VERSION")"
 	RUBY_VERSION="${expanded_version:-$RUBY_VERSION}"
 
 	source "$RUBY_INSTALL_DIR/functions.sh"
