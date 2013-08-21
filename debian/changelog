@@ -1,3 +1,9 @@
+ruby-install (0.3.0-1) unstable; urgency=low
+
+  * Incorporate new command-line options
+
+ -- Alex Young <alex@blackkettle.org>  Wed, 21 Aug 2013 15:29:56 +0100
+
 ruby-install (0.3.0) unstable; urgency=low
 
   * Initial package
