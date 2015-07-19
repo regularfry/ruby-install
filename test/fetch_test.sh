@@ -1,24 +1,47 @@
+#!/usr/bin/env bash
+
 . ./test/helper.sh
+
+ruby_install_dir="./test/tmp"
+FILE="$ruby_install_dir/db.txt"
 
 function setUp()
 {
-	RUBY=ruby
+	mkdir "$ruby_install_dir"
 }
 
 function test_fetch()
 {
-	local key="1.8.7"
-	local expected="1.8.7-p374"
-	local value=$(fetch "$RUBY/versions" "$key")
+	local key="1.9.3"
+	local expected="1.9.3-p484"
+
+	echo "$key: $expected" > "$FILE"
+
+	local value=$(fetch "db" "$key")
 
 	assertEquals "did not fetch the correct value" "$expected" "$value"
 }
 
+function test_fetch_with_tabs()
+{
+	local key="ruby-1.9.3-p484.tar.bz2"
+	local expected="03f5b08804927ceabe5122cb90f5d0a9"
+
+	echo -e "$key:\t$expected" > "$FILE"
+
+	local value=$(fetch "db" "$key")
+
+	assertEquals "did not remove the trailing tabs" "$expected" "$value"
+}
+
 function test_fetch_with_excess_whitespace()
 {
-	local key="ruby-1.8.7-p374.tar.bz2"
-	local expected="83c92e2b57ea08f31187060098b2200b"
-	local value=$(fetch "$RUBY/md5" "$key")
+	local key="ruby-1.9.3-p484.tar.bz2"
+	local expected="03f5b08804927ceabe5122cb90f5d0a9"
+
+	echo "$key:     $expected" > "$FILE"
+
+	local value=$(fetch "db" "$key")
 
 	assertEquals "did not fetch the correct value" "$expected" "$value"
 }
@@ -27,9 +50,17 @@ function test_fetch_with_unknown_key()
 {
 	local key="foo"
 	local expected=""
-	local value=$(fetch "$RUBY/versions" "$key")
+
+	echo "bar: bar" > "$FILE"
+
+	local value=$(fetch "db" "$key")
 
 	assertEquals "returned the wrong value" "$expected" "$value"
+}
+
+function tearDown()
+{
+	rm -r "$ruby_install_dir"
 }
 
 SHUNIT_PARENT=$0 . $SHUNIT2

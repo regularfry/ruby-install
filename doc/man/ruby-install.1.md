@@ -1,8 +1,8 @@
-# ruby-install 1 "May 2013" ruby-install "User Manuals"
+# ruby-install 1 "Apr 2015" ruby-install "User Manuals"
 
 ## SYNOPSIS
 
-`ruby-install` [RUBY [VERSION]] [-- CONFIGURE_OPTS...]
+`ruby-install` [RUBY [VERSION] [-- CONFIGURE_OPTS...]]
 
 ## DESCRIPTION
 
@@ -23,19 +23,39 @@ https://github.com/postmodern/ruby-install#readme
 
 ## OPTIONS
 
-`-s`, `--src-dir` *DIR*
-	Specifies the directory for downloading and unpacking Ruby source.
+`-r`, `--rubies-dir` *DIR*
+	Specifies the alternate directory where other Ruby directories are
+	installed, such as *~/.rvm/rubies* or *~/.rbenv/versions*.
+	Defaults to */opt/rubies* for root and *~/.rubies* for normal users.
 
 `-i`, `--install-dir` *DIR*
 	Specifies the directory where Ruby will be installed.
 	Defaults to */opt/rubies/$ruby-$version* for root and
 	*~/.rubies/$ruby-$version* for normal users.
 
+`--prefix` *DIR*
+	Alias for `-i DIR`.
+
+`--system`
+	Alias for `-i /usr/local`.
+
+`-s`, `--src-dir` *DIR*
+	Specifies the directory for downloading and unpacking Ruby source.
+
+`-c`, `--cleanup`
+	Remove the downloaded Ruby archive and unpacked source-code after
+	installation.
+
+`-j[`*JOBS*`]`, `--jobs[=`*JOBS*`]`
+	Specifies the number of *make* jobs to run in parallel when compiling
+	Ruby. If the -j option is provided without an argument, *make* will
+	allow an unlimited number of simultaneous jobs.
+
 `-p`, `--patch` *FILE*
 	Specifies any additional patches to apply.
 
 `-M`, `--mirror` *URL*
-	Specifies an altnerate mirror to download the Ruby archive from.
+	Specifies an alternate mirror to download the Ruby archive from.
 
 `-u`, `--url` *URL*
 	Alternate URL to download the Ruby archive from.
@@ -43,11 +63,24 @@ https://github.com/postmodern/ruby-install#readme
 `-m`, `--md5` *MD5*
 	Specifies the MD5 checksum for the Ruby archive.
 
+`--sha1` *SHA1*
+	Specifies the SHA1 checksum for the Ruby archive.
+
+`--sha256` *SHA256*
+	Specifies the SHA256 checksum for the Ruby archive.
+
+`--sha512` *SHA512*
+	Specifies the SHA512 checksum for the Ruby archive.
+
 `--no-download`
 	Use the previously downloaded Ruby archive.
 
 `--no-verify`
 	Do not verify the downloaded Ruby archive.
+
+`--no-extract`
+	Do not extract the downloaded Ruby archive. Implies `--no-download`
+	and `--no-verify`.
 
 `--no-install-deps`
 	Do not install build dependencies before installing Ruby.
@@ -63,19 +96,55 @@ https://github.com/postmodern/ruby-install#readme
 
 ## EXAMPLES
 
+List supported Rubies and their major versions:
+
+    $ ruby-install
+
 Install the current stable version of Ruby:
 
     $ ruby-install ruby
 
+Install a latest version of Ruby:
+
+    $ ruby-install ruby 2.2
+
 Install a specific version of Ruby:
 
-    $ ruby-install ruby 1.9.3-p395
+    $ ruby-install ruby 2.2.2
+
+Install a Ruby into a specific directory:
+
+    $ ruby-install --system ruby 2.2.2
+
+Install a Ruby from an official site with directly download:
+
+    $ ruby-install -M https://ftp.ruby-lang.org/pub/ruby ruby 2.0.0-p645
+
+Install a Ruby from a mirror:
+
+    $ ruby-install -M http://www.mirrorservice.org/sites/ftp.ruby-lang.org/pub/ruby ruby 2.0.0-p645
+
+Install a Ruby with a specific patch:
+
+    $ ruby-install -p https://raw.github.com/gist/4136373/falcon-gc.diff ruby 1.9.3-p551
+
+Install a Ruby with specific configuration:
+
+    $ ruby-install ruby 2.2.2 -- --enable-shared --enable-dtrace CFLAGS="-O3"
+
+Using ruby-install with [RVM]:
+
+    $ ruby-install --rubies-dir ~/.rvm/rubies ruby 2.2.2
+
+Using ruby-install with [rbenv]:
+
+    $ ruby-install -i ~/.rbenv/versions/2.2.2 ruby 2.2.2
 
 ## FILES
 
 */usr/local/src*
 	Default root user source directory.
-    
+
 *~/src*
 	Default non-root user source directory.
 

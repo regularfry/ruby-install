@@ -1,11 +1,17 @@
+#!/usr/bin/env bash
+
 . ./test/helper.sh
 
 function setUp()
 {
-	unset RUBY
-	unset RUBY_VERSION
-	unset SRC_DIR
-	unset INSTALL_DIR
+	patches=()
+	configure_opts=()
+	make_opts=()
+
+	unset ruby
+	unset ruby_version
+	unset src_dir
+	unset install_dir
 }
 
 function test_parse_options_with_no_arguments()
@@ -26,9 +32,9 @@ function test_parse_options_with_one_argument()
 {
 	local expected="jruby"
 
-	parse_options $expected
+	parse_options "$expected"
 
-	assertEquals "did not set \$RUBY" $expected $RUBY
+	assertEquals "did not set \$ruby" "$expected" "$ruby"
 }
 
 function test_parse_options_with_two_arguments()
@@ -36,11 +42,11 @@ function test_parse_options_with_two_arguments()
 	local expected_ruby="jruby"
 	local expected_version="1.7.4"
 
-	parse_options $expected_ruby $expected_version
+	parse_options "$expected_ruby" "$expected_version"
 
-	assertEquals "did not set \$RUBY" $expected_ruby $RUBY
-	assertEquals "did not set \$RUBY_VERSION" $expected_version \
-		     				  $RUBY_VERSION
+	assertEquals "did not set \$ruby" "$expected_ruby" "$ruby"
+	assertEquals "did not set \$ruby_version" "$expected_version" \
+		     				  "$ruby_version"
 }
 
 function test_parse_options_with_more_than_two_arguments()
@@ -54,27 +60,65 @@ function test_parse_options_with_install_dir()
 {
 	local expected="/usr/local/"
 
-	parse_options "--install-dir" $expected "ruby"
+	parse_options "--install-dir" "$expected" "ruby"
 
-	assertEquals "did not set \$INSTALL_DIR" $expected $INSTALL_DIR
+	assertEquals "did not set \$install_dir" "$expected" "$install_dir"
+}
+
+function test_parse_options_with_prefix()
+{
+	local expected="/usr/local/"
+
+	parse_options "--prefix" "$expected" "ruby"
+
+	assertEquals "did not set \$install_dir" "$expected" "$install_dir"
+}
+
+function test_parse_options_with_system()
+{
+	local expected="/usr/local"
+
+	parse_options "--system"
+
+	assertEquals "did not set \$install_dir to $expected" "$expected" \
+		                                              "$install_dir"
 }
 
 function test_parse_options_with_src_dir()
 {
 	local expected="~/src/"
 
-	parse_options "--src-dir" $expected "ruby"
+	parse_options "--src-dir" "$expected" "ruby"
 
-	assertEquals "did not set \$SRC_DIR" $expected $SRC_DIR
+	assertEquals "did not set \$src_dir" "$expected" "$src_dir"
+}
+
+function test_parse_options_with_jobs()
+{
+	local expected="--jobs"
+
+	parse_options "$expected" "ruby"
+
+	assertEquals "did not set \$make_opts" "$expected" "${make_opts[0]}"
+}
+
+function test_parse_options_with_jobs_and_arguments()
+{
+	local expected="--jobs=4"
+
+	parse_options "$expected" "ruby"
+
+	assertEquals "did not set \$make_opts" "$expected" "${make_opts[0]}"
 }
 
 function test_parse_options_with_patches()
 {
 	local expected=(patch1.diff patch2.diff)
 
-	parse_options "--patch" ${expected[0]} "--patch" ${expected[1]} "ruby"
+	parse_options "--patch" "${expected[0]}" \
+		      "--patch" "${expected[1]}" "ruby"
 
-	assertEquals "did not set \$PATCHES" $expected $PATCHES
+	assertEquals "did not set \$patches" $expected $patches
 }
 
 function test_parse_options_with_mirror()
@@ -83,7 +127,7 @@ function test_parse_options_with_mirror()
 
 	parse_options "--mirror" "$mirror" "ruby"
 
-	assertEquals "did not set \$RUBY_MIRROR" "$mirror" "$RUBY_MIRROR"
+	assertEquals "did not set \$ruby_mirror" "$mirror" "$ruby_mirror"
 }
 
 function test_parse_options_with_url()
@@ -92,7 +136,7 @@ function test_parse_options_with_url()
 
 	parse_options "--url" "$url" "ruby"
 
-	assertEquals "did not set \$RUBY_URL" "$url" "$RUBY_URL"
+	assertEquals "did not set \$ruby_url" "$url" "$ruby_url"
 }
 
 function test_parse_options_with_md5()
@@ -101,35 +145,71 @@ function test_parse_options_with_md5()
 
 	parse_options "--md5" "$md5" "ruby"
 
-	assertEquals "did not set \$RUBY_MD5" "$md5" "$RUBY_MD5"
+	assertEquals "did not set \$ruby_md5" "$md5" "$ruby_md5"
+}
+
+function test_parse_options_with_sha1()
+{
+	local sha1="2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
+
+	parse_options "--sha1" "$sha1" "ruby"
+
+	assertEquals "did not set \$ruby_sha1" "$sha1" "$ruby_sha1"
+}
+
+function test_parse_options_with_sha256()
+{
+	local sha256="b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
+
+	parse_options "--sha256" "$sha256" "ruby"
+
+	assertEquals "did not set \$ruby_sha256" "$sha256" "$ruby_sha256"
+}
+
+function test_parse_options_with_sha512()
+{
+	local sha512="309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f"
+
+	parse_options "--sha512" "$sha512" "ruby"
+
+	assertEquals "did not set \$ruby_sha512" "$sha512" "$ruby_sha512"
 }
 
 function test_parse_options_with_no_download()
 {
 	parse_options "--no-download" "ruby"
 
- 	assertEquals "did not set \$NO_DOWNLOAD" 1 $NO_DOWNLOAD
+ 	assertEquals "did not set \$no_download" 1 $no_download
 }
 
 function test_parse_options_with_no_verify()
 {
 	parse_options "--no-verify" "ruby"
 
- 	assertEquals "did not set \$NO_VERIFY" 1 $NO_VERIFY
+ 	assertEquals "did not set \$no_verify" 1 $no_verify
+}
+
+function test_parse_options_with_no_verify()
+{
+	parse_options "--no-extract" "ruby"
+
+ 	assertEquals "did not set \$no_extract" 1 $no_extract
+ 	assertEquals "did not set \$no_verify" 1 $no_verify
+ 	assertEquals "did not set \$no_download" 1 $no_download
 }
 
 function test_parse_options_with_no_install_deps()
 {
 	parse_options "--no-install-deps" "ruby"
 
- 	assertEquals "did not set \$NO_INSTALL_DEPS" 1 $NO_INSTALL_DEPS
+ 	assertEquals "did not set \$no_install_deps" 1 $no_install_deps
 }
 
 function test_parse_options_with_no_reinstall()
 {
 	parse_options "--no-reinstall" "ruby"
 
-	assertEquals "did not set to \$NO_REINSTALL" 1 $NO_REINSTALL
+	assertEquals "did not set to \$no_reinstall" 1 $no_reinstall
 }
 
 function test_parse_options_with_additional_options()
@@ -138,7 +218,15 @@ function test_parse_options_with_additional_options()
 
 	parse_options "ruby" "--" $expected
 
-	assertEquals "did not set \$CONFIGURE_OPTS" $expected $CONFIGURE_OPTS
+	assertEquals "did not set \$configure_opts" $expected $configure_opts
+}
+
+function test_parse_options_with_additional_options_with_spaces()
+{
+	parse_options "ruby" "--" --enable-shared CFLAGS="-march=auto -O2"
+
+	assertEquals "did not word-split \$configure_opts correctly" \
+          'CFLAGS=-march=auto -O2' "${configure_opts[1]}"
 }
 
 SHUNIT_PARENT=$0 . $SHUNIT2

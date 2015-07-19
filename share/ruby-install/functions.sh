@@ -1,18 +1,22 @@
-if (( $UID == 0 )); then
-	SRC_DIR="${SRC_DIR:-/usr/local/src}"
-	INSTALL_DIR="${INSTALL_DIR:-/opt/rubies/$RUBY-$RUBY_VERSION}"
+source "$ruby_install_dir/checksums.sh"
+
+if (( UID == 0 )); then
+	src_dir="${src_dir:-/usr/local/src}"
+	rubies_dir="${rubies_dir:-/opt/rubies}"
 else
-	SRC_DIR="${SRC_DIR:-$HOME/src}"
-	INSTALL_DIR="${INSTALL_DIR:-$HOME/.rubies/$RUBY-$RUBY_VERSION}"
+	src_dir="${src_dir:-$HOME/src}"
+	rubies_dir="${rubies_dir:-$HOME/.rubies}"
 fi
+
+install_dir="${install_dir:-$rubies_dir/$ruby-$ruby_version}"
 
 #
 # Pre-install tasks
 #
 function pre_install()
 {
-	mkdir -p "$SRC_DIR"
-	mkdir -p "${INSTALL_DIR%/*}"
+	mkdir -p "$src_dir" || return $?
+	mkdir -p "${install_dir%/*}" || return $?
 }
 
 #
@@ -20,14 +24,14 @@ function pre_install()
 #
 function install_deps()
 {
-	local packages="$(fetch "$RUBY/dependencies" "$PACKAGE_MANAGER")"
+	local packages=($(fetch "$ruby/dependencies" "$package_manager" || return $?))
 
-	if [[ -n "$packages" ]]; then
-		log "Installing dependencies for $RUBY $RUBY_VERSION ..."
-		install_packages $packages
+	if (( ${#packages[@]} > 0 )); then
+		log "Installing dependencies for $ruby $ruby_version ..."
+		install_packages "${packages[@]}" || return $?
 	fi
 
-	install_optional_deps
+	install_optional_deps || return $?
 }
 
 #
@@ -40,21 +44,39 @@ function install_optional_deps() { return; }
 #
 function download_ruby()
 {
-	log "Downloading $RUBY_URL into $SRC_DIR ..."
-	download "$RUBY_URL" "$SRC_DIR/$RUBY_ARCHIVE"
+	log "Downloading $ruby_url into $src_dir ..."
+	download "$ruby_url" "$src_dir/$ruby_archive" || return $?
 }
 
 #
-# Verifies the Ruby archive matches a checksum.
+# Looks up a checksum for $ruby_archive.
+#
+function ruby_checksum()
+{
+	local algorithm="$1"
+	local checksums="$ruby_dir/checksums.$algorithm"
+
+	lookup_checksum "$checksums" "$ruby_archive"
+}
+
+#
+# Verifies the Ruby archive against all known checksums.
 #
 function verify_ruby()
 {
-	if [[ -n "$RUBY_MD5" ]]; then
-		log "Verifying $RUBY_ARCHIVE ..."
-		verify "$SRC_DIR/$RUBY_ARCHIVE" "$RUBY_MD5"
-	else
-		warn "No checksum for $RUBY_ARCHIVE. Proceeding anyways"
-	fi
+	local file="$src_dir/$ruby_archive"
+
+	log "Verifying $ruby_archive ..."
+
+	ruby_md5="${ruby_md5:-$(ruby_checksum md5)}"
+	ruby_sha1="${ruby_sha1:-$(ruby_checksum sha1)}"
+	ruby_sha256="${ruby_sha256:-$(ruby_checksum sha256)}"
+	ruby_sha512="${ruby_sha512:-$(ruby_checksum sha512)}"
+
+	verify_checksum "$file" md5 "$ruby_md5"       || return $?
+	verify_checksum "$file" sha1 "$ruby_sha1"     || return $?
+	verify_checksum "$file" sha256 "$ruby_sha256" || return $?
+	verify_checksum "$file" sha512 "$ruby_sha512" || return $?
 }
 
 #
@@ -62,8 +84,8 @@ function verify_ruby()
 #
 function extract_ruby()
 {
-	log "Extracting $RUBY_ARCHIVE ..."
-	extract "$SRC_DIR/$RUBY_ARCHIVE" "$SRC_DIR"
+	log "Extracting $ruby_archive to $src_dir/$ruby_src_dir ..."
+	extract "$src_dir/$ruby_archive" "$src_dir" || return $?
 }
 
 #
@@ -71,13 +93,17 @@ function extract_ruby()
 #
 function download_patches()
 {
-	local dest
+	local i patch dest
 
-	for patch in "${PATCHES[@]}"; do
-		if [[ "$patch" == http:\/\/* || "$patch" == https:\/\/* ]]; then
+	for (( i=0; i<${#patches[@]}; i++ )) do
+		patch="${patches[$i]}"
+
+		if [[ "$patch" == "http://"* || "$patch" == "https://"* ]]; then
+			dest="$src_dir/$ruby_src_dir/${patch##*/}"
+
 			log "Downloading patch $patch ..."
-			dest="$SRC_DIR/$RUBY_SRC_DIR/${patch##*/}"
-			download "$patch" "$dest"
+			download "$patch" "$dest" || return $?
+			patches[$i]="$dest"
 		fi
 	done
 }
@@ -87,17 +113,13 @@ function download_patches()
 #
 function apply_patches()
 {
-	local name
+	local patch name
 
-	for patch in "${PATCHES[@]}"; do
+	for patch in "${patches[@]}"; do
 		name="${patch##*/}"
+
 		log "Applying patch $name ..."
-
-		if [[ "$patch" == http:\/\/* || "$patch" == https:\/\/* ]]; then
-			patch="$SRC_DIR/$RUBY_SRC_DIR/$name"
-		fi
-
-		patch -p1 -d "$SRC_DIR/$RUBY_SRC_DIR" < "$patch"
+		patch -p1 -d "$src_dir/$ruby_src_dir" < "$patch" || return $?
 	done
 }
 
@@ -105,6 +127,11 @@ function apply_patches()
 # Place holder function for configuring Ruby.
 #
 function configure_ruby() { return; }
+
+#
+# Place holder function for cleaning Ruby.
+#
+function clean_ruby() { return; }
 
 #
 # Place holder function for compiling Ruby.
@@ -120,3 +147,14 @@ function install_ruby() { return; }
 # Place holder function for post-install tasks.
 #
 function post_install() { return; }
+
+#
+# Remove downloaded archive and unpacked source.
+#
+function cleanup_source() {
+	log "Removing $src_dir/$ruby_archive ..."
+	rm "$src_dir/$ruby_archive" || return $?
+
+	log "Removing $src_dir/$ruby_src_dir ..."
+	rm -rf "$src_dir/$ruby_src_dir" || return $?
+}

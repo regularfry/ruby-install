@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-RUBY_ARCHIVE="jruby-bin-$RUBY_VERSION.tar.gz"
-RUBY_SRC_DIR="jruby-$RUBY_VERSION"
-RUBY_MIRROR="${RUBY_MIRROR:-http://jruby.org.s3.amazonaws.com/downloads}"
-RUBY_URL="${RUBY_URL:-$RUBY_MIRROR/$RUBY_VERSION/$RUBY_ARCHIVE}"
+ruby_archive="jruby-bin-$ruby_version.tar.gz"
+ruby_src_dir="jruby-$ruby_version"
+ruby_mirror="${ruby_mirror:-https://s3.amazonaws.com/jruby.org/downloads}"
+ruby_url="${ruby_url:-$ruby_mirror/$ruby_version/$ruby_archive}"
 
 #
-# Install JRuby into $INSTALL_DIR.
+# Install JRuby into $install_dir.
 #
 function install_ruby()
 {
-	log "Installing jruby $RUBY_VERSION ..."
-	mv "$SRC_DIR/$RUBY_SRC_DIR" "$INSTALL_DIR"
+	log "Installing jruby $ruby_version ..."
+	cp -R "$src_dir/$ruby_src_dir" "$install_dir" || return $?
 }
 
 #
@@ -20,9 +20,9 @@ function install_ruby()
 function post_install()
 {
 	log "Symlinking bin/ruby to bin/jruby ..."
-	ln -fs jruby "$INSTALL_DIR/bin/ruby"
+	ln -fs jruby "$install_dir/bin/ruby" || return $?
 
-	if [[ "$PACKAGE_MANAGER" == "brew" ]]; then
+	if ! command -v java >/dev/null; then
 		warn "In order to use JRuby you must install OracleJDK:"
 		warn "  http://www.oracle.com/technetwork/java/javase/downloads/index.html"
 	fi

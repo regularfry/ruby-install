@@ -1,35 +1,45 @@
 #!/usr/bin/env bash
 
-RUBY_VERSION_FAMILY="${RUBY_VERSION:0:3}"
-RUBY_ARCHIVE="ruby-$RUBY_VERSION.tar.bz2"
-RUBY_SRC_DIR="ruby-$RUBY_VERSION"
-RUBY_MIRROR="${RUBY_MIRROR:-ftp://ftp.ruby-lang.org/pub/ruby}"
-RUBY_URL="${RUBY_URL:-$RUBY_MIRROR/$RUBY_VERSION_FAMILY/$RUBY_ARCHIVE}"
-
-RUBYGEMS_VERSION="2.0.3"
-RUBYGEMS_ARCHIVE="rubygems-$RUBYGEMS_VERSION.tgz"
-RUBYGEMS_SRC_DIR="rubygems-$RUBYGEMS_VERSION"
-RUBYGEMS_URL="http://production.cf.rubygems.org/rubygems/$RUBYGEMS_ARCHIVE"
-RUBYGEMS_MD5="$(fetch "$RUBY/md5" "$RUBYGEMS_ARCHIVE")"
-
-if [[ "$RUBY_VERSION_FAMILY" == "1.8" ]]; then
-	PATCHES+=("$RUBY_DIR"/patches/1.8/*.patch)
-fi
+ruby_version_family="${ruby_version:0:3}"
+ruby_archive="ruby-$ruby_version.tar.bz2"
+ruby_src_dir="ruby-$ruby_version"
+ruby_mirror="${ruby_mirror:-http://cache.ruby-lang.org/pub/ruby}"
+ruby_url="${ruby_url:-$ruby_mirror/$ruby_version_family/$ruby_archive}"
 
 #
 # Configures Ruby.
 #
 function configure_ruby()
 {
-	log "Configuring ruby $RUBY_VERSION ..."
-
-	if [[ "$PACKAGE_MANAGER" == "brew" ]]; then
-		./configure --prefix="$INSTALL_DIR" \
-			    --with-opt-dir="$(brew --prefix openssl):$(brew --prefix readline):$(brew --prefix libyaml):$(brew --prefix gdbm):$(brew --prefix libffi)" \
-			    $CONFIGURE_OPTS
-	else
-		./configure --prefix="$INSTALL_DIR" $CONFIGURE_OPTS
+	if [[ ! -s configure || configure.in -nt configure ]]; then
+		log "Regenerating ./configure script ..."
+		autoreconf || return $?
 	fi
+
+	local opt_dir
+
+	log "Configuring ruby $ruby_version ..."
+	case "$package_manager" in
+		brew)
+			opt_dir="$(brew --prefix openssl):$(brew --prefix readline):$(brew --prefix libyaml):$(brew --prefix gdbm)"
+			;;
+		port)
+			opt_dir="/opt/local"
+			;;
+	esac
+
+	./configure --prefix="$install_dir" \
+		    "${opt_dir:+--with-opt-dir="$opt_dir"}" \
+		    "${configure_opts[@]}" || return $?
+}
+
+#
+# Cleans Ruby.
+#
+function clean_ruby()
+{
+	log "Cleaning ruby $ruby_version ..."
+	make clean || return $?
 }
 
 #
@@ -37,33 +47,15 @@ function configure_ruby()
 #
 function compile_ruby()
 {
-	log "Compiling ruby $RUBY_VERSION ..."
-	make
+	log "Compiling ruby $ruby_version ..."
+	make "${make_opts[@]}" || return $?
 }
 
 #
-# Installs Ruby into $INSTALL_DIR
+# Installs Ruby into $install_dir
 #
 function install_ruby()
 {
-	log "Installing ruby $RUBY_VERSION ..."
-	make install
-}
-
-function post_install()
-{
-	if [[ "$RUBY_VERSION_FAMILY" == "1.8" ]]; then
-		log "Downloading $RUBYGEMS_URL into $SRC_DIR ..."
-		download "$RUBYGEMS_URL" "$SRC_DIR"
-
-		log "Verifying $RUBYGEMS_ARCHIVE ..."
-		verify "$SRC_DIR/$RUBYGEMS_ARCHIVE" "$RUBYGEMS_MD5"
-
-		log "Extracting $RUBYGEMS_ARCHIVE ..."
-		extract "$SRC_DIR/$RUBYGEMS_ARCHIVE"
-
-		log "Installing rubygems $RUBYGEMS_VERSION ..."
-		cd "$SRC_DIR/$RUBYGEMS_SRC_DIR"
-		"$INSTALL_DIR/bin/ruby" setup.rb
-	fi
+	log "Installing ruby $ruby_version ..."
+	make install || return $?
 }

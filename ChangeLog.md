@@ -1,3 +1,170 @@
+### 0.5.0 / 2014-10-18
+
+* Added the `--prefix` alias for `--install-dir`.
+* Added the `--system` alias for `--install-dir /usr/local`.
+* Added the `--sha1` option.
+* Added the `--sha256` option.
+* Added the `--sha512` option.
+* Added the `--cleanup` option for deleting the downloaded archive after a
+  successful installation.
+* Added the `--no-extract` option.
+* Switched to using [ruby-versions] for version and checksum information.
+  * Adds support for verifying SHA1, SHA256 and SHA512 checksums.
+  * All releases of ruby-install will automatically include the latest versions
+    and checksums from [ruby-versions].
+  * All Pull Requests for new Ruby versions **MUST** be sent to [ruby-versions]!
+
+#### rbx
+
+* Remove duplicate `gem install bundler` command.
+* Added `llvm-static` as a yum dependency.
+
+### 0.4.3 / 2014-05-08
+
+#### ruby
+
+* Added 2.1.2.
+* Do not explicitly quote the value of `--with-opt-dir`.
+
+#### rbx
+
+* Do not explicitly quote the value of `--with-opt-dir`.
+
+### 0.4.2 / 2014-04-17
+
+#### ruby
+
+* Call `autoreconf` if `configure.in` was patched but `configure` was not.
+
+#### jruby
+
+* Added version 1.7.12.
+
+#### rbx
+
+* Added version 2.2.6.
+* Install bundler into `vendor/gems/` to prevent issues when the default
+  gemdir is not writable or does not yet exist.
+
+### 0.4.1 / 2014-03-03
+
+* Always clean the source directory before re-building, to prevent linking
+  errors after an OS upgrade.
+
+#### functions.sh
+
+* Added the `clean_ruby` function to handle cleaning the source directory.
+
+#### ruby
+
+* Added versions for 2.1.1, 2.0.0-p451 and 1.9.3-p545.
+* Removed version aliases for 1.9.1 and 1.9.2.
+
+#### jruby
+
+* Added the 1.7.11 version.
+* Copy the compiled ruby instead of moving it.
+
+#### maglev
+
+* Copy the compiled ruby instead of moving it.
+
+#### mruby
+
+* Add support for building with `-j,--jobs`.
+* Copy the compiled ruby instead of moving it.
+
+### 0.4.0 / 2014-02-13
+
+* Add support for installing [MRuby] 1.0.0!
+* Add the `--rubies-dir` option.
+* Add the `--jobs` flag, similar to `make -j4` (@havenwood).
+* Support for using the `openssl md5` command (@keiththomps).
+* Use the default ANSI foreground colour, for terminals which white backgrounds
+  (@cscorley).
+* Improved error handling by explicitly returning error codes instead of
+  relying on `set -e` (@havenwood).
+* Attempt to upgrade previously installed homebrew dependencies.
+* Renamed rubinius to rbx for consistency.
+
+#### ruby
+
+* Add version aliases for 1.9.1 and 1.9.2.
+* Remove 1.8.x specific workarounds/patches.
+* Pass in `--with-opt-dir=/opt/local` when macports is detected.
+
+#### jruby
+
+* Added version for 1.7.10.
+* Check for the existence of java, before recommending users install OracleJDK.
+
+#### rbx
+
+* Added versions for 2.2.3, 2.2.4 and 2.2.5.
+
+### 0.3.4 / 2013-12-25
+
+* Use the `.part` file extension for files being downloaded, to distinguish
+  between already downloaded files.
+
+#### ruby
+
+* Added versions for 2.1.0-rc1 and 2.1.0.
+
+#### jruby
+
+* Added version for 1.7.9.
+
+#### rubinius
+
+* Added version for 2.2.2.
+
+### 0.3.3 / 2013-12-04
+
+* Add support for the MacPorts package manager (@havenwood).
+* Fixed extglob pattern in `fetch`.
+
+### 0.3.2 / 2013-11-22
+
+* Exit normally when `--no-reinstall` is specified and the ruby has already
+  been installed. (@cbandy)
+* `fetch()` can now strip trailing tabs as well as spaces.
+
+#### ruby
+
+* Added version aliases for `2` and `1`.
+* Added versions 1.9.3-p484, 2.0.0-p353 and 2.1.0-preview2 for CVE-2013-4164.
+
+#### jruby
+
+* Added versions 1.7.6, 1.7.7 and 1.7.8.
+
+#### rubinius
+
+* Drop support for installing 2.0.0, due to multiple bugs.
+* Added versions 2.1.1, 2.2.0 and 2.2.1.
+
+### 0.3.1 / 2013-09-23
+
+* Always use the system's `stat` command on OSX (@paul).
+* Do not assume homebrew is installed at `/usr/local/bin/brew`.
+* Properly quote/expand `$CONFIGURE_OPTS` to prevent incorrect word-splitting
+  (@pbrisbin).
+* Style changes.
+
+#### ruby
+
+* Download from the new http://cache.ruby-lang.org/ CDN (@hsbt).
+* When installing ruby 1.8.x, rubygems-2.1.3 will now be installed.
+* Added the MD5 checksum for ruby-2.1.0-preview1.tar.bz2.
+* Added the `2.1` and `2.1.0` version aliases for 2.1.0-preview1.
+
+#### rubinius
+
+* Support the new 2.x installation process.
+* Added MD5s and versions for `2.1.0` and `2.0.0`.
+* Removed support for `2.0.0-rc1`.
+
 ### 0.3.0 / 2013-07-06
 
 * Added the `-M`,`--mirror` to make it easier to use mirrors.
@@ -116,3 +283,6 @@
 [JRuby]: http://jruby.org/
 [Rubinius]: http://rubini.us/
 [MagLev]: http://maglev.github.io/
+[MRuby]: https://github.com/mruby/mruby#readme
+
+[ruby-versions]: https://github.com/postmodern/ruby-versions#readme

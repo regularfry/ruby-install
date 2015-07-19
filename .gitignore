@@ -1,5 +1,5 @@
-test/src/
-debian/files
-debian/ruby-install.debhelper.log
-debian/ruby-install.substvars
-debian/ruby-install/
+/test/src/
+/debian/files
+/debian/ruby-install.debhelper.log
+/debian/ruby-install.substvars
+/debian/ruby-install/

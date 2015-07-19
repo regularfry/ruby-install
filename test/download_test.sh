@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 . ./test/helper.sh
 
 URL="https://raw.github.com/postmodern/ruby-install/master/README.md"
@@ -7,6 +9,7 @@ function test_download()
 {
 	download "$URL" "$OUTPUT" 2>/dev/null
 
+	assertFalse "did not remove the .part file" '[[ -f "$OUTPUT.part" ]]'
 	assertTrue "did not download the file" '[[ -f "$OUTPUT" ]]'
 }
 
@@ -27,7 +30,7 @@ function test_download_using_wget()
 {
 	command -v wget >/dev/null || return
 
-	DOWNLOADER="wget" download "$URL" "$OUTPUT" 2>/dev/null
+	downloader="wget" download "$URL" "$OUTPUT" 2>/dev/null
 
 	assertTrue "did not download the file" '[[ -f "$OUTPUT" ]]'
 }
@@ -36,7 +39,7 @@ function test_download_using_curl()
 {
 	command -v curl >/dev/null || return
 
-	DOWNLOADER="curl" download "$URL" "$OUTPUT" 2>/dev/null
+	downloader="curl" download "$URL" "$OUTPUT" 2>/dev/null
 
 	assertTrue "did not download the file" '[[ -f "$OUTPUT" ]]'
 }
