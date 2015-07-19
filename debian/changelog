@@ -1,3 +1,10 @@
+ruby-install (0.5.1-1) unstable; urgency=low
+
+  * Update to upstream 0.5.1
+  * Change sudo from Depends to Suggests, as per-user is fine
+
+ -- Alex Young <alex@blackkettle.org>  Sun, 19 Jul 2015 17:43:32 +0100
+
 ruby-install (0.3.0-1) unstable; urgency=low
 
   * Incorporate new command-line options

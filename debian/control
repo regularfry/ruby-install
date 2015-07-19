@@ -8,7 +8,8 @@ Homepage: https://github.com/postmodern/ruby-install#readme
 
 Package: ruby-install
 Architecture: all
-Depends: ${misc:Depends}, sudo
+Depends: ${misc:Depends}
+Suggests: sudo
 Description: Builds and installs ruby binaries.
-  Installs the required system packages to build and install MRI, JRuby 
+  Installs the required system packages to build and install MRI, JRuby
   and Rubinius interpreters under /opt/rubies or ~/.rubies.
